@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PostBot — Israel Post AI Assistant</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -11,12 +12,22 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
       background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
       min-height: 100vh;
+    }
+
+    /* ─── Page wrapper (fades out when map opens) ─── */
+    .page-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      min-height: 100vh;
       padding: 24px 16px;
-      gap: 0;
+      transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+    .page-wrap.map-open {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96);
     }
 
     /* ─── Page header ─── */
@@ -74,15 +85,11 @@
       position: relative;
       flex-shrink: 0;
     }
-
-    /* Side buttons */
     .phone::before {
       content: '';
       position: absolute;
-      left: -4px;
-      top: 120px;
-      width: 4px;
-      height: 34px;
+      left: -4px; top: 120px;
+      width: 4px; height: 34px;
       background: #2a2a2a;
       border-radius: 2px 0 0 2px;
       box-shadow: 0 44px 0 #2a2a2a, 0 86px 0 #2a2a2a;
@@ -90,17 +97,14 @@
     .phone::after {
       content: '';
       position: absolute;
-      right: -4px;
-      top: 160px;
-      width: 4px;
-      height: 60px;
+      right: -4px; top: 160px;
+      width: 4px; height: 60px;
       background: #2a2a2a;
       border-radius: 0 2px 2px 0;
     }
 
     .phone-screen {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       background: white;
       border-radius: 42px;
       overflow: hidden;
@@ -108,14 +112,11 @@
       flex-direction: column;
     }
 
-    /* Notch */
     .notch {
       position: absolute;
-      top: 10px;
-      left: 50%;
+      top: 10px; left: 50%;
       transform: translateX(-50%);
-      width: 110px;
-      height: 26px;
+      width: 110px; height: 26px;
       background: #1a1a1a;
       border-radius: 0 0 18px 18px;
       z-index: 20;
@@ -159,8 +160,7 @@
       padding-right: 2px;
     }
     .avatar {
-      width: 38px;
-      height: 38px;
+      width: 38px; height: 38px;
       background: white;
       border-radius: 50%;
       display: flex;
@@ -185,28 +185,19 @@
       margin-top: 1px;
     }
     .online-dot {
-      width: 7px;
-      height: 7px;
+      width: 7px; height: 7px;
       background: #4ade80;
       border-radius: 50%;
       animation: glow 2s ease-in-out infinite;
     }
     @keyframes glow {
       0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
-      50% { box-shadow: 0 0 0 3px rgba(74,222,128,0.3); }
+      50%       { box-shadow: 0 0 0 3px rgba(74,222,128,0.3); }
     }
-    .header-sub span {
-      color: rgba(255,255,255,0.85);
-      font-size: 12px;
-    }
-    .header-icons {
-      display: flex;
-      gap: 16px;
-      color: rgba(255,255,255,0.9);
-      font-size: 16px;
-    }
+    .header-sub span { color: rgba(255,255,255,0.85); font-size: 12px; }
+    .header-icons { display: flex; gap: 16px; color: rgba(255,255,255,0.9); font-size: 16px; }
 
-    /* ─── Chat messages area ─── */
+    /* ─── Chat area ─── */
     .chat-body {
       flex: 1;
       overflow-y: auto;
@@ -216,14 +207,12 @@
       flex-direction: column;
       gap: 3px;
       background-color: #ece5dd;
-      background-image:
-        radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0);
+      background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0);
       background-size: 20px 20px;
     }
     .chat-body::-webkit-scrollbar { width: 3px; }
     .chat-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
 
-    /* Date chip */
     .date-chip {
       align-self: center;
       background: rgba(255,255,255,0.85);
@@ -236,7 +225,7 @@
       animation: msgIn 0.25s ease-out;
     }
 
-    /* Message bubbles */
+    /* ─── Message bubbles ─── */
     .msg {
       max-width: 78%;
       padding: 7px 10px 6px;
@@ -262,8 +251,7 @@
     .msg-bot::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -7px;
+      top: 0; left: -7px;
       width: 0; height: 0;
       border-top: 8px solid #ffffff;
       border-left: 7px solid transparent;
@@ -279,8 +267,7 @@
     .msg-user::before {
       content: '';
       position: absolute;
-      top: 0;
-      right: -7px;
+      top: 0; right: -7px;
       width: 0; height: 0;
       border-top: 8px solid #25D366;
       border-right: 7px solid transparent;
@@ -293,14 +280,9 @@
       gap: 3px;
       margin-top: 3px;
     }
-    .msg-time {
-      font-size: 10.5px;
-      color: rgba(0,0,0,0.38);
-    }
+    .msg-time { font-size: 10.5px; color: rgba(0,0,0,0.38); }
     .msg-user .msg-time { color: rgba(255,255,255,0.7); }
     .msg-ticks { font-size: 11px; color: rgba(255,255,255,0.75); }
-
-    /* Spacing helpers */
     .msg-gap-top { margin-top: 6px; }
 
     /* ─── Typing indicator ─── */
@@ -314,22 +296,17 @@
       gap: 5px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.12);
       animation: msgIn 0.25s ease-out;
+      position: relative;
     }
     .typing::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -7px;
+      top: 0; left: -7px;
       width: 0; height: 0;
       border-top: 8px solid white;
       border-left: 7px solid transparent;
     }
-    .typing { position: relative; }
-    .dot {
-      width: 7px; height: 7px;
-      background: #bbb;
-      border-radius: 50%;
-    }
+    .dot { width: 7px; height: 7px; background: #bbb; border-radius: 50%; }
     .dot:nth-child(1) { animation: dotBounce 1.2s infinite 0.0s; }
     .dot:nth-child(2) { animation: dotBounce 1.2s infinite 0.2s; }
     .dot:nth-child(3) { animation: dotBounce 1.2s infinite 0.4s; }
@@ -365,10 +342,7 @@
       color: #555;
       border: 1.5px solid #ddd;
     }
-    .act-btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    }
+    .act-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     .act-btn:disabled { opacity: 0.45; cursor: default; transform: none !important; }
 
     /* ─── Input bar ─── */
@@ -412,12 +386,7 @@
       justify-content: center;
       flex-shrink: 0;
     }
-    .home-bar {
-      width: 110px; height: 4px;
-      background: #222;
-      border-radius: 2px;
-      opacity: 0.22;
-    }
+    .home-bar { width: 110px; height: 4px; background: #222; border-radius: 2px; opacity: 0.22; }
 
     /* ─── Next button ─── */
     .cta-wrap {
@@ -446,101 +415,372 @@
       box-shadow: 0 8px 24px rgba(204,0,0,0.42);
     }
     .next-btn:active:not(:disabled) { transform: translateY(0); }
-    .next-btn:disabled {
-      background: #aaa;
-      cursor: default;
-      box-shadow: none;
-      transform: none;
+    .next-btn:disabled { background: #aaa; cursor: default; box-shadow: none; transform: none; }
+    .hint { font-size: 12px; color: #aaa; letter-spacing: 0.2px; }
+
+
+    /* ═══════════════════════════════════════════════════════
+       MAP OVERLAY — full viewport, fixed position
+    ═══════════════════════════════════════════════════════ */
+
+    .map-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100vh);
+      transition: transform 0.44s cubic-bezier(0.32, 0.72, 0, 1);
+      background: white;
     }
-    .hint {
+    .map-overlay.open {
+      transform: translateY(0);
+    }
+
+    /* ── Map top bar ── */
+    .map-top-bar {
+      background: #CC0000;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .map-status-row {
+      height: 44px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 22px 8px;
       font-size: 12px;
-      color: #aaa;
-      letter-spacing: 0.2px;
+      font-weight: 600;
+      color: white;
+    }
+    .map-status-right { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+    .map-header-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px 14px;
+    }
+    .map-back-arrow {
+      color: rgba(255,255,255,0.9);
+      font-size: 24px;
+      font-weight: 300;
+      cursor: pointer;
+      line-height: 1;
+      padding-right: 2px;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .map-back-arrow:hover { opacity: 0.7; }
+    .map-header-info { flex: 1; }
+    .map-header-title { color: white; font-weight: 700; font-size: 16px; }
+    .map-header-status {
+      color: rgba(255,255,255,0.9);
+      font-size: 12.5px;
+      margin-top: 2px;
+      transition: all 0.4s;
+    }
+    .map-header-icon { font-size: 22px; }
+
+    /* ── Leaflet map ── */
+    #map-div {
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── Arrival toast ── */
+    .arrival-toast {
+      position: absolute;
+      top: 118px;
+      left: 16px;
+      right: 16px;
+      background: white;
+      border-radius: 14px;
+      padding: 11px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      text-align: center;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+      z-index: 1010;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.38s ease, transform 0.38s ease;
+      pointer-events: none;
+    }
+    .arrival-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Bottom card — pastel iOS-style ── */
+    .map-bottom-card {
+      background: linear-gradient(135deg, #f5e642 0%, #f0a0b0 35%, #a0c4f5 70%, #a8e6b0 100%);
+      flex-shrink: 0;
+      padding: 6px 20px 28px;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -6px 22px rgba(0,0,0,0.13);
+    }
+    .map-drag-handle {
+      width: 38px;
+      height: 4px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+    .map-pkg-rows { margin-bottom: 14px; }
+    .map-pkg-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+    }
+    .map-pkg-row:last-child { border-bottom: none; }
+    .map-pkg-row span { color: #555; font-weight: 500; }
+    .map-pkg-row strong { color: #1a1a1a; font-weight: 700; }
+    .map-pkg-status { color: #1a8a3a !important; }
+    .map-back-btn-wrap { text-align: center; }
+    .map-back-btn {
+      background: white;
+      color: #333;
+      border: none;
+      padding: 11px 32px;
+      border-radius: 26px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.14);
+      letter-spacing: 0.1px;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .map-back-btn:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      transform: translateY(-1px);
+    }
+
+    /* ─── Custom Leaflet marker styles ─── */
+    .lm-gray {
+      background: #888;
+      color: white;
+      border-radius: 10px;
+      padding: 3px 9px;
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+      border: 1.5px solid rgba(255,255,255,0.55);
+    }
+    .lm-current-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .lm-pulse {
+      width: 14px; height: 14px;
+      background: #25D366;
+      border-radius: 50%;
+      border: 2.5px solid white;
+      animation: mapPulse 1.6s ease-out infinite;
+    }
+    @keyframes mapPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(37,211,102,0.65); }
+      70%  { box-shadow: 0 0 0 10px rgba(37,211,102,0); }
+      100% { box-shadow: 0 0 0 0 rgba(37,211,102,0); }
+    }
+    .lm-current-label {
+      background: #25D366;
+      color: white;
+      border-radius: 9px;
+      padding: 2px 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+    }
+    .lm-customer-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .lm-customer-pin {
+      font-size: 28px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .lm-customer-label {
+      background: #CC0000;
+      color: white;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+    }
+    .lm-truck {
+      font-size: 26px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+    }
+    /* FIX 2 — delivery window floating label */
+    .lm-delivery-window {
+      background: #CC0000;
+      color: white;
+      border-radius: 9px;
+      padding: 2px 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.35);
+      border: 1.5px solid rgba(255,255,255,0.45);
+    }
+    /* FIX 3 — clock context subtitle */
+    .map-header-context {
+      color: rgba(255,255,255,0.68);
+      font-size: 11px;
+      margin-top: 3px;
+      letter-spacing: 0.1px;
     }
   </style>
 </head>
 <body>
 
-  <div class="page-header">
-    <h1>PostBot 🇮🇱 — Israel Post AI Demo</h1>
-    <p>Powered by Claude AI &nbsp;·&nbsp; WhatsApp Integration Prototype</p>
-  </div>
+  <!-- ═══ PAGE (fades when map opens) ═══ -->
+  <div class="page-wrap" id="page-wrap">
 
-  <div class="scenario-badge">
-    <span class="badge-pill">Scenario <span id="s-num">1</span> / 3</span>
-    <span class="badge-title" id="s-title">Smart Tracking</span>
-  </div>
+    <div class="page-header">
+      <h1>PostBot 🇮🇱 — Israel Post AI Demo</h1>
+      <p>Powered by Claude AI &nbsp;·&nbsp; WhatsApp Integration Prototype</p>
+    </div>
 
-  <!-- ═══ PHONE ═══ -->
-  <div class="phone">
-    <div class="notch"></div>
-    <div class="phone-screen">
+    <div class="scenario-badge">
+      <span class="badge-pill">Scenario <span id="s-num">1</span> / 3</span>
+      <span class="badge-title" id="s-title">Smart Tracking</span>
+    </div>
 
-      <!-- Status bar -->
-      <div class="status-bar">
-        <span>9:41</span>
-        <div class="status-right">
-          <span>●●●●</span>
-          <span>5G</span>
-          <span>🔋 100%</span>
-        </div>
-      </div>
+    <!-- ═══ PHONE ═══ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-screen">
 
-      <!-- Chat header -->
-      <div class="chat-header">
-        <div class="back-btn">‹</div>
-        <div class="avatar">📦</div>
-        <div class="header-info">
-          <div class="header-name">PostBot 🇮🇱 — Israel Post</div>
-          <div class="header-sub">
-            <div class="online-dot"></div>
-            <span>online</span>
+        <div class="status-bar">
+          <span>9:41</span>
+          <div class="status-right">
+            <span>●●●●</span><span>5G</span><span>🔋 100%</span>
           </div>
         </div>
-        <div class="header-icons">
-          <span>📹</span>
-          <span>📞</span>
+
+        <div class="chat-header">
+          <div class="back-btn">‹</div>
+          <div class="avatar">📦</div>
+          <div class="header-info">
+            <div class="header-name">PostBot 🇮🇱 — Israel Post</div>
+            <div class="header-sub">
+              <div class="online-dot"></div>
+              <span>online</span>
+            </div>
+          </div>
+          <div class="header-icons"><span>📹</span><span>📞</span></div>
+        </div>
+
+        <div class="chat-body" id="chat-body"></div>
+
+        <div class="chat-input">
+          <span style="font-size:20px;color:#aaa">😊</span>
+          <div class="input-mock">Type a message…</div>
+          <div class="mic-btn">🎤</div>
+        </div>
+
+        <div class="home-bar-wrap"><div class="home-bar"></div></div>
+
+      </div>
+    </div>
+    <!-- end phone -->
+
+    <div class="cta-wrap">
+      <button class="next-btn" id="next-btn">Next Scenario ▶</button>
+      <span class="hint" id="hint-txt">Click to advance to Scenario 2</span>
+    </div>
+
+  </div>
+  <!-- end page-wrap -->
+
+
+  <!-- ═══ MAP OVERLAY — full screen, fixed, outside phone ═══ -->
+  <div class="map-overlay" id="map-overlay">
+
+    <div class="map-top-bar">
+      <div class="map-status-row">
+        <span>9:41</span>
+        <div class="map-status-right">
+          <span>●●●●</span><span>5G</span><span>🔋 100%</span>
         </div>
       </div>
-
-      <!-- Messages -->
-      <div class="chat-body" id="chat-body"></div>
-
-      <!-- Input bar -->
-      <div class="chat-input">
-        <span style="font-size:20px;color:#aaa">😊</span>
-        <div class="input-mock">Type a message…</div>
-        <div class="mic-btn">🎤</div>
+      <div class="map-header-row">
+        <div class="map-back-arrow" onclick="closeMap(true)">‹</div>
+        <div class="map-header-info">
+          <div class="map-header-title">PostBot 🇮🇱 Live Tracking</div>
+          <div class="map-header-status" id="map-eta">🚚 2 stops away · ETA 14:00–16:00</div>
+          <div class="map-header-context">Current time: 09:41 · Delivery window: 14:00–16:00</div>
+        </div>
+        <div class="map-header-icon">🗺️</div>
       </div>
-
-      <!-- Home indicator -->
-      <div class="home-bar-wrap"><div class="home-bar"></div></div>
-
     </div>
-  </div>
-  <!-- end phone -->
 
-  <div class="cta-wrap">
-    <button class="next-btn" id="next-btn">Next Scenario ▶</button>
-    <span class="hint" id="hint-txt">Click to advance to Scenario 2</span>
-  </div>
+    <div id="map-div"></div>
 
+    <div class="arrival-toast" id="arrival-toast">🎉 Your courier has arrived!</div>
+
+    <div class="map-bottom-card">
+      <div class="map-drag-handle"></div>
+      <div class="map-pkg-rows">
+        <div class="map-pkg-row">
+          <span>Package</span>
+          <strong>IL123456789</strong>
+        </div>
+        <div class="map-pkg-row">
+          <span>Status</span>
+          <strong class="map-pkg-status">Out for delivery</strong>
+        </div>
+        <div class="map-pkg-row">
+          <span>Est. arrival</span>
+          <strong>Today, 14:00–16:00</strong>
+        </div>
+      </div>
+      <div class="map-back-btn-wrap">
+        <button class="map-back-btn" onclick="closeMap(true)">← Back to Chat</button>
+      </div>
+    </div>
+
+  </div>
+  <!-- end map overlay -->
+
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    /* ─── state ─── */
-    let current = 0;          // 0-indexed, currently displayed
-    let busy = false;
+    /* ─── Global state ─── */
+    let current = 0;
+    let busy    = false;
+    let leafletMap  = null;
+    let truckMarker = null;
+    let rafId       = null;
+    let pauseId     = null; /* inter-stage pause timer */
 
     const titles = ['Smart Tracking', 'Anomaly Detection', 'Current Events Warning'];
     const hints  = ['Click to advance to Scenario 2', 'Click to advance to Scenario 3', 'Click to restart'];
 
-    /* ─── helpers ─── */
-    const $ = id => document.getElementById(id);
-    const body = () => $('chat-body');
+    /* ─── Helpers ─── */
+    const $        = id => document.getElementById(id);
+    const chatBody = ()  => $('chat-body');
 
     function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     function scroll() {
-      const b = body();
+      const b = chatBody();
       b.scrollTo({ top: b.scrollHeight, behavior: 'smooth' });
     }
 
@@ -548,21 +788,17 @@
       const el = document.createElement('div');
       el.className = 'date-chip';
       el.textContent = label;
-      body().appendChild(el);
+      chatBody().appendChild(el);
       scroll();
     }
 
     function addMsg(html, side, time, gapTop = false) {
       const el = document.createElement('div');
       el.className = `msg msg-${side}${gapTop ? ' msg-gap-top' : ''}`;
-      const ticks = side === 'user' ? `<span class="msg-ticks">✓✓</span>` : '';
-      el.innerHTML = `
-        <div>${html}</div>
-        <div class="msg-meta">
-          <span class="msg-time">${time}</span>
-          ${ticks}
-        </div>`;
-      body().appendChild(el);
+      const ticks = side === 'user' ? '<span class="msg-ticks">✓✓</span>' : '';
+      el.innerHTML = `<div>${html}</div>
+        <div class="msg-meta"><span class="msg-time">${time}</span>${ticks}</div>`;
+      chatBody().appendChild(el);
       scroll();
       return el;
     }
@@ -571,16 +807,39 @@
       const el = document.createElement('div');
       el.className = 'typing';
       el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
-      body().appendChild(el);
+      chatBody().appendChild(el);
       scroll();
       return el;
     }
 
     function removeEl(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
 
-    /* ─── Scenario 1 ─── */
+    function addActionRow(buttons) {
+      const row = document.createElement('div');
+      row.className = 'action-row';
+      buttons.forEach(({ label, cls, onClick, style }) => {
+        const btn = document.createElement('button');
+        btn.className = `act-btn ${cls}`;
+        btn.textContent = label;
+        if (style) btn.style.cssText = style;
+        btn.onclick = () => {
+          row.querySelectorAll('button').forEach(b => b.disabled = true);
+          onClick();
+        };
+        row.appendChild(btn);
+      });
+      chatBody().appendChild(row);
+      scroll();
+      return row;
+    }
+
+
+    /* ═══════════════════════════════════════
+       SCENARIO 1 — Smart Tracking
+    ═══════════════════════════════════════ */
+
     async function runS1() {
-      body().innerHTML = '';
+      chatBody().innerHTML = '';
       await wait(250);
 
       addDateChip('Today');
@@ -589,23 +848,262 @@
       addMsg('Where is my package IL123456789?', 'user', '11:31', true);
       await wait(600);
 
-      const t = addTyping();
+      let t = addTyping();
       await wait(1600);
       removeEl(t);
 
+      /* FIX 3 — "Today" instead of "Tomorrow" */
       addMsg(
         '📦 Package <strong>IL123456789</strong> located!<br>' +
         '📍 Status: Tel Aviv Sorting Center<br>' +
         '🕐 Last scan: Today at 11:32<br>' +
-        '🚚 Estimated delivery: <strong>Tomorrow, 14:00–16:00</strong><br>' +
+        '🚚 Estimated delivery: <strong>Today, 14:00–16:00</strong><br>' +
         "I'll notify you automatically when it's out for delivery. ✅",
         'bot', '11:32', false
       );
+      await wait(700);
+
+      t = addTyping();
+      await wait(1200);
+      removeEl(t);
+
+      addMsg('Would you like to follow your parcel live on the map? 🗺️', 'bot', '11:33');
+      await wait(450);
+
+      addActionRow([
+        { label: '✅ Yes, track live', cls: 'act-yes', onClick: handleMapYes },
+        { label: '❌ No thanks',       cls: 'act-no',  onClick: handleMapNo  },
+      ]);
     }
 
-    /* ─── Scenario 2 ─── */
+    async function handleMapYes() {
+      if (busy) return;
+      busy = true;
+      addMsg('✅ Yes, track live', 'user', '11:33', true);
+      await wait(300);
+      openMap();
+      busy = false;
+    }
+
+    async function handleMapNo() {
+      if (busy) return;
+      busy = true;
+      addMsg('❌ No thanks', 'user', '11:33', true);
+      await wait(400);
+      const t = addTyping();
+      await wait(1100);
+      removeEl(t);
+      addMsg("No problem! I'll notify you when the courier is close. 🔔", 'bot', '11:33');
+      busy = false;
+    }
+
+
+    /* ═══════════════════════════════════════
+       MAP — open / close / init
+    ═══════════════════════════════════════ */
+
+    function openMap() {
+      /* Reset UI state */
+      $('map-eta').textContent = '🚚 2 stops away · ETA 14:00–16:00';
+      $('arrival-toast').classList.remove('show');
+
+      /* Slide map up, fade page out */
+      $('map-overlay').classList.add('open');
+      $('page-wrap').classList.add('map-open');
+      document.body.style.overflow = 'hidden';
+
+      /* Init Leaflet after transition ends */
+      setTimeout(initMap, 450);
+    }
+
+    /* FIX 4 — userInitiated flag: only show reopen button when user taps Back */
+    function closeMap(userInitiated = false) {
+      $('map-overlay').classList.remove('open');
+      $('page-wrap').classList.remove('map-open');
+      document.body.style.overflow = '';
+
+      if (rafId)   { cancelAnimationFrame(rafId); rafId = null; }
+      if (pauseId) { clearTimeout(pauseId); pauseId = null; }
+      if (leafletMap) { leafletMap.remove(); leafletMap = null; truckMarker = null; }
+
+      /* FIX 4 — inject "Open Map Again" button only when user closed it in S1 */
+      if (userInitiated && current === 0) {
+        setTimeout(addMapReopenBtn, 300); /* wait for page fade-in */
+      }
+    }
+
+    function addMapReopenBtn() {
+      /* Remove any existing reopen button before adding a fresh one */
+      const old = $('map-reopen-row');
+      if (old) removeEl(old);
+
+      const row = document.createElement('div');
+      row.id = 'map-reopen-row';
+      row.className = 'action-row';
+      const btn = document.createElement('button');
+      btn.className = 'act-btn act-yes';
+      btn.style.cssText = 'background:#1a73e8; box-shadow:0 2px 8px rgba(26,115,232,0.4); flex:none; width:100%; padding:10px;';
+      btn.textContent = '🗺️ Open Map Again';
+      btn.onclick = () => { removeEl(row); openMap(); };
+      row.appendChild(btn);
+      chatBody().appendChild(row);
+      scroll();
+    }
+
+    /* ── FIX 1+2: wider coords, OSRM road route, fitBounds ── */
+    async function initMap() {
+      if (leafletMap) return;
+
+      /* FIX 1 — new, well-separated coordinates */
+      const pts = {
+        depot:    [32.0650, 34.7650],
+        stop1:    [32.0720, 34.7700],
+        stop2:    [32.0780, 34.7750],
+        stop3:    [32.0830, 34.7800],
+        customer: [32.0900, 34.7850],
+      };
+
+      leafletMap = L.map('map-div', {
+        zoomControl: false,
+        attributionControl: true,
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+        maxZoom: 19,
+      }).addTo(leafletMap);
+
+      /* Fit all points in view with padding */
+      const allPts = Object.values(pts);
+      leafletMap.fitBounds(allPts, { padding: [48, 48] });
+
+      /* ── Completed route polyline (gray dashed) ── */
+      L.polyline([pts.depot, pts.stop1, pts.stop2, pts.stop3], {
+        color: '#999', weight: 5, dashArray: '9 6', opacity: 0.85,
+      }).addTo(leafletMap);
+
+      /* ── Remaining route polyline (red) — updated with road geometry if OSRM succeeds ── */
+      const redLine = L.polyline([pts.stop3, pts.customer], {
+        color: '#CC0000', weight: 5, opacity: 0.9,
+      }).addTo(leafletMap);
+
+      /* ── Stop markers ── */
+      L.marker(pts.stop1, {
+        icon: L.divIcon({
+          html: '<div class="lm-gray">Stop 1 ✓</div>',
+          className: '', iconSize: [76, 24], iconAnchor: [38, 12],
+        }),
+      }).addTo(leafletMap);
+
+      L.marker(pts.stop2, {
+        icon: L.divIcon({
+          html: '<div class="lm-gray">Stop 2 ✓</div>',
+          className: '', iconSize: [76, 24], iconAnchor: [38, 12],
+        }),
+      }).addTo(leafletMap);
+
+      L.marker(pts.stop3, {
+        icon: L.divIcon({
+          html: '<div class="lm-current-wrap"><div class="lm-pulse"></div><div class="lm-current-label">Stop 3 — Current</div></div>',
+          className: '', iconSize: [120, 38], iconAnchor: [60, 7],
+        }),
+      }).addTo(leafletMap);
+
+      L.marker(pts.customer, {
+        icon: L.divIcon({
+          html: '<div class="lm-customer-wrap"><div class="lm-customer-pin">📍</div><div class="lm-customer-label">You 🏠</div></div>',
+          className: '', iconSize: [76, 56], iconAnchor: [38, 50],
+        }),
+      }).addTo(leafletMap);
+
+      /* ── Truck marker ── */
+      truckMarker = L.marker(pts.stop3, {
+        icon: L.divIcon({
+          html: '<div class="lm-truck">🚚</div>',
+          className: '', iconSize: [30, 30], iconAnchor: [15, 15],
+        }),
+        zIndexOffset: 600,
+      }).addTo(leafletMap);
+
+      /* ── FIX 2 — fetch real road route from OSRM ── */
+      let animPath = [pts.stop3, pts.customer]; /* straight-line fallback */
+      try {
+        const s3   = pts.stop3;
+        const cust = pts.customer;
+        /* OSRM uses lng,lat order */
+        const url = `https://router.project-osrm.org/route/v1/driving/${s3[1]},${s3[0]};${cust[1]},${cust[0]}?overview=full&geometries=geojson`;
+        const resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        const data = await resp.json();
+        if (data.code === 'Ok' && data.routes && data.routes[0]) {
+          /* GeoJSON coords are [lng, lat] — convert to Leaflet [lat, lng] */
+          animPath = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+          /* Update red polyline to follow real road */
+          redLine.setLatLngs(animPath);
+        }
+      } catch (e) {
+        /* Network error or timeout — keep straight-line fallback */
+        console.warn('OSRM route fetch failed, using straight line:', e.message);
+      }
+
+      /* ── Start truck animation along the road path ── */
+      startTruckAnim(animPath, 8000);
+    }
+
+    /* Smooth animation along an arbitrary polyline */
+    function startTruckAnim(path, duration) {
+      if (path.length < 2) return;
+
+      /* Precompute cumulative distances (in raw deg units, good enough for animation) */
+      const dists = [0];
+      for (let i = 1; i < path.length; i++) {
+        const dlat = path[i][0] - path[i-1][0];
+        const dlng = path[i][1] - path[i-1][1];
+        dists.push(dists[i-1] + Math.sqrt(dlat*dlat + dlng*dlng));
+      }
+      const total = dists[dists.length - 1];
+
+      let t0 = null;
+      function frame(now) {
+        if (!t0) t0 = now;
+        const progress = Math.min((now - t0) / duration, 1);
+        const target   = progress * total;
+
+        /* Find segment with binary search */
+        let lo = 0, hi = path.length - 2;
+        while (lo < hi) {
+          const mid = (lo + hi + 1) >> 1;
+          dists[mid] <= target ? lo = mid : hi = mid - 1;
+        }
+        const seg    = lo;
+        const segLen = dists[seg + 1] - dists[seg];
+        const t      = segLen > 0 ? (target - dists[seg]) / segLen : 0;
+        const lat    = path[seg][0] + (path[seg + 1][0] - path[seg][0]) * t;
+        const lng    = path[seg][1] + (path[seg + 1][1] - path[seg][1]) * t;
+
+        if (truckMarker) truckMarker.setLatLng([lat, lng]);
+
+        if (progress < 1) {
+          rafId = requestAnimationFrame(frame);
+        } else {
+          rafId = null;
+          onTruckArrived();
+        }
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function onTruckArrived() {
+      $('map-eta').textContent = '🎉 Arriving now!';
+      $('arrival-toast').classList.add('show');
+    }
+
+
+    /* ═══════════════════════════════════════
+       SCENARIO 2 — Anomaly Detection
+    ═══════════════════════════════════════ */
+
     async function runS2() {
-      body().innerHTML = '';
+      chatBody().innerHTML = '';
       await wait(250);
 
       addDateChip('Today');
@@ -620,32 +1118,15 @@
       );
       await wait(500);
 
-      // action buttons
-      const row = document.createElement('div');
-      row.className = 'action-row';
-
-      const yes = document.createElement('button');
-      yes.className = 'act-btn act-yes';
-      yes.textContent = '✅ Yes, reschedule';
-
-      const no = document.createElement('button');
-      no.className = 'act-btn act-no';
-      no.textContent = '❌ No thanks';
-
-      yes.onclick = () => handleS2(row, true);
-      no.onclick  = () => handleS2(row, false);
-
-      row.appendChild(yes);
-      row.appendChild(no);
-      body().appendChild(row);
-      scroll();
+      addActionRow([
+        { label: '✅ Yes, reschedule', cls: 'act-yes', onClick: () => handleS2(true)  },
+        { label: '❌ No thanks',       cls: 'act-no',  onClick: () => handleS2(false) },
+      ]);
     }
 
-    async function handleS2(row, agreed) {
+    async function handleS2(agreed) {
       if (busy) return;
       busy = true;
-      row.querySelectorAll('button').forEach(b => b.disabled = true);
-
       if (agreed) {
         addMsg('✅ Yes, reschedule', 'user', '09:15', true);
         await wait(350);
@@ -667,13 +1148,16 @@
           'bot', '09:15'
         );
       }
-
       busy = false;
     }
 
-    /* ─── Scenario 3 ─── */
+
+    /* ═══════════════════════════════════════
+       SCENARIO 3 — Current Events Warning
+    ═══════════════════════════════════════ */
+
     async function runS3() {
-      body().innerHTML = '';
+      chatBody().innerHTML = '';
       await wait(250);
 
       addDateChip('Today');
@@ -689,6 +1173,7 @@
       );
     }
 
+
     /* ─── Scenario runner ─── */
     const runners = [runS1, runS2, runS3];
 
@@ -696,12 +1181,13 @@
       if (busy) return;
       busy = true;
 
-      $('next-btn').disabled = true;
+      closeMap(); /* always close map when advancing, no reopen button */
 
+      $('next-btn').disabled = true;
       current = (current + 1) % 3;
 
-      $('s-num').textContent  = current + 1;
-      $('s-title').textContent = titles[current];
+      $('s-num').textContent   = current + 1;
+      $('s-title').textContent  = titles[current];
       $('hint-txt').textContent = hints[current];
       $('next-btn').textContent = current === 2 ? '↩ Restart' : 'Next Scenario ▶';
 
@@ -714,7 +1200,7 @@
 
     $('next-btn').addEventListener('click', advance);
 
-    /* ─── Boot with Scenario 1 ─── */
+    /* ─── Boot ─── */
     (async () => {
       busy = true;
       await runS1();
