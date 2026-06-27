@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PostBot — Israel Post AI Assistant</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      gap: 0;
+    }
+
+    /* ─── Page header ─── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #CC0000;
+      letter-spacing: -0.3px;
+    }
+    .page-header p {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #888;
+    }
+
+    /* ─── Scenario pill ─── */
+    .scenario-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .badge-pill {
+      background: #CC0000;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    /* ─── Phone shell ─── */
+    .phone {
+      width: 360px;
+      height: 700px;
+      background: #1a1a1a;
+      border-radius: 50px;
+      padding: 10px;
+      box-shadow:
+        0 0 0 1px #3a3a3a,
+        0 30px 80px rgba(0,0,0,0.45),
+        0 10px 30px rgba(0,0,0,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* Side buttons */
+    .phone::before {
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: 120px;
+      width: 4px;
+      height: 34px;
+      background: #2a2a2a;
+      border-radius: 2px 0 0 2px;
+      box-shadow: 0 44px 0 #2a2a2a, 0 86px 0 #2a2a2a;
+    }
+    .phone::after {
+      content: '';
+      position: absolute;
+      right: -4px;
+      top: 160px;
+      width: 4px;
+      height: 60px;
+      background: #2a2a2a;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: white;
+      border-radius: 42px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Notch */
+    .notch {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 26px;
+      background: #1a1a1a;
+      border-radius: 0 0 18px 18px;
+      z-index: 20;
+    }
+
+    /* ─── Status bar ─── */
+    .status-bar {
+      background: #CC0000;
+      height: 44px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 22px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+    }
+
+    /* ─── Chat header ─── */
+    .chat-header {
+      background: #CC0000;
+      padding: 8px 14px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    .back-btn {
+      color: rgba(255,255,255,0.9);
+      font-size: 22px;
+      font-weight: 300;
+      line-height: 1;
+      padding-right: 2px;
+    }
+    .avatar {
+      width: 38px;
+      height: 38px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .header-info { flex: 1; min-width: 0; }
+    .header-name {
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-sub {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 1px;
+    }
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: glow 2s ease-in-out infinite;
+    }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+      50% { box-shadow: 0 0 0 3px rgba(74,222,128,0.3); }
+    }
+    .header-sub span {
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+    }
+    .header-icons {
+      display: flex;
+      gap: 16px;
+      color: rgba(255,255,255,0.9);
+      font-size: 16px;
+    }
+
+    /* ─── Chat messages area ─── */
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 10px 8px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background-color: #ece5dd;
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0);
+      background-size: 20px 20px;
+    }
+    .chat-body::-webkit-scrollbar { width: 3px; }
+    .chat-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+
+    /* Date chip */
+    .date-chip {
+      align-self: center;
+      background: rgba(255,255,255,0.85);
+      color: #666;
+      font-size: 11.5px;
+      padding: 3px 10px;
+      border-radius: 8px;
+      margin: 4px 0 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      animation: msgIn 0.25s ease-out;
+    }
+
+    /* Message bubbles */
+    .msg {
+      max-width: 78%;
+      padding: 7px 10px 6px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      position: relative;
+      word-wrap: break-word;
+      animation: msgIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .msg-bot {
+      align-self: flex-start;
+      background: #ffffff;
+      color: #111;
+      border-radius: 0 10px 10px 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    }
+    .msg-bot::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -7px;
+      width: 0; height: 0;
+      border-top: 8px solid #ffffff;
+      border-left: 7px solid transparent;
+    }
+
+    .msg-user {
+      align-self: flex-end;
+      background: #25D366;
+      color: white;
+      border-radius: 10px 0 10px 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+    .msg-user::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -7px;
+      width: 0; height: 0;
+      border-top: 8px solid #25D366;
+      border-right: 7px solid transparent;
+    }
+
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 3px;
+      margin-top: 3px;
+    }
+    .msg-time {
+      font-size: 10.5px;
+      color: rgba(0,0,0,0.38);
+    }
+    .msg-user .msg-time { color: rgba(255,255,255,0.7); }
+    .msg-ticks { font-size: 11px; color: rgba(255,255,255,0.75); }
+
+    /* Spacing helpers */
+    .msg-gap-top { margin-top: 6px; }
+
+    /* ─── Typing indicator ─── */
+    .typing {
+      align-self: flex-start;
+      background: white;
+      border-radius: 0 10px 10px 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+      animation: msgIn 0.25s ease-out;
+    }
+    .typing::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -7px;
+      width: 0; height: 0;
+      border-top: 8px solid white;
+      border-left: 7px solid transparent;
+    }
+    .typing { position: relative; }
+    .dot {
+      width: 7px; height: 7px;
+      background: #bbb;
+      border-radius: 50%;
+    }
+    .dot:nth-child(1) { animation: dotBounce 1.2s infinite 0.0s; }
+    .dot:nth-child(2) { animation: dotBounce 1.2s infinite 0.2s; }
+    .dot:nth-child(3) { animation: dotBounce 1.2s infinite 0.4s; }
+    @keyframes dotBounce {
+      0%, 60%, 100% { transform: translateY(0); background: #bbb; }
+      30%            { transform: translateY(-5px); background: #999; }
+    }
+
+    /* ─── Action buttons ─── */
+    .action-row {
+      display: flex;
+      gap: 7px;
+      padding: 4px 2px 2px;
+      animation: msgIn 0.35s ease-out;
+    }
+    .act-btn {
+      flex: 1;
+      padding: 9px 6px;
+      border: none;
+      border-radius: 22px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .act-yes {
+      background: #25D366;
+      color: white;
+      box-shadow: 0 2px 6px rgba(37,211,102,0.4);
+    }
+    .act-no {
+      background: white;
+      color: #555;
+      border: 1.5px solid #ddd;
+    }
+    .act-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .act-btn:disabled { opacity: 0.45; cursor: default; transform: none !important; }
+
+    /* ─── Input bar ─── */
+    .chat-input {
+      background: #f0f2f5;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .input-mock {
+      flex: 1;
+      background: white;
+      border-radius: 22px;
+      padding: 9px 14px;
+      font-size: 13px;
+      color: #bbb;
+      border: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      pointer-events: none;
+    }
+    .mic-btn {
+      width: 36px; height: 36px;
+      background: #CC0000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ─── Home indicator ─── */
+    .home-bar-wrap {
+      height: 26px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-bar {
+      width: 110px; height: 4px;
+      background: #222;
+      border-radius: 2px;
+      opacity: 0.22;
+    }
+
+    /* ─── Next button ─── */
+    .cta-wrap {
+      margin-top: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .next-btn {
+      background: #CC0000;
+      color: white;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 32px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+      box-shadow: 0 4px 18px rgba(204,0,0,0.38);
+      transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+    .next-btn:hover:not(:disabled) {
+      background: #b30000;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(204,0,0,0.42);
+    }
+    .next-btn:active:not(:disabled) { transform: translateY(0); }
+    .next-btn:disabled {
+      background: #aaa;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+    .hint {
+      font-size: 12px;
+      color: #aaa;
+      letter-spacing: 0.2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>PostBot 🇮🇱 — Israel Post AI Demo</h1>
+    <p>Powered by Claude AI &nbsp;·&nbsp; WhatsApp Integration Prototype</p>
+  </div>
+
+  <div class="scenario-badge">
+    <span class="badge-pill">Scenario <span id="s-num">1</span> / 3</span>
+    <span class="badge-title" id="s-title">Smart Tracking</span>
+  </div>
+
+  <!-- ═══ PHONE ═══ -->
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="phone-screen">
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-right">
+          <span>●●●●</span>
+          <span>5G</span>
+          <span>🔋 100%</span>
+        </div>
+      </div>
+
+      <!-- Chat header -->
+      <div class="chat-header">
+        <div class="back-btn">‹</div>
+        <div class="avatar">📦</div>
+        <div class="header-info">
+          <div class="header-name">PostBot 🇮🇱 — Israel Post</div>
+          <div class="header-sub">
+            <div class="online-dot"></div>
+            <span>online</span>
+          </div>
+        </div>
+        <div class="header-icons">
+          <span>📹</span>
+          <span>📞</span>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-body" id="chat-body"></div>
+
+      <!-- Input bar -->
+      <div class="chat-input">
+        <span style="font-size:20px;color:#aaa">😊</span>
+        <div class="input-mock">Type a message…</div>
+        <div class="mic-btn">🎤</div>
+      </div>
+
+      <!-- Home indicator -->
+      <div class="home-bar-wrap"><div class="home-bar"></div></div>
+
+    </div>
+  </div>
+  <!-- end phone -->
+
+  <div class="cta-wrap">
+    <button class="next-btn" id="next-btn">Next Scenario ▶</button>
+    <span class="hint" id="hint-txt">Click to advance to Scenario 2</span>
+  </div>
+
+  <script>
+    /* ─── state ─── */
+    let current = 0;          // 0-indexed, currently displayed
+    let busy = false;
+
+    const titles = ['Smart Tracking', 'Anomaly Detection', 'Current Events Warning'];
+    const hints  = ['Click to advance to Scenario 2', 'Click to advance to Scenario 3', 'Click to restart'];
+
+    /* ─── helpers ─── */
+    const $ = id => document.getElementById(id);
+    const body = () => $('chat-body');
+
+    function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function scroll() {
+      const b = body();
+      b.scrollTo({ top: b.scrollHeight, behavior: 'smooth' });
+    }
+
+    function addDateChip(label) {
+      const el = document.createElement('div');
+      el.className = 'date-chip';
+      el.textContent = label;
+      body().appendChild(el);
+      scroll();
+    }
+
+    function addMsg(html, side, time, gapTop = false) {
+      const el = document.createElement('div');
+      el.className = `msg msg-${side}${gapTop ? ' msg-gap-top' : ''}`;
+      const ticks = side === 'user' ? `<span class="msg-ticks">✓✓</span>` : '';
+      el.innerHTML = `
+        <div>${html}</div>
+        <div class="msg-meta">
+          <span class="msg-time">${time}</span>
+          ${ticks}
+        </div>`;
+      body().appendChild(el);
+      scroll();
+      return el;
+    }
+
+    function addTyping() {
+      const el = document.createElement('div');
+      el.className = 'typing';
+      el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      body().appendChild(el);
+      scroll();
+      return el;
+    }
+
+    function removeEl(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
+
+    /* ─── Scenario 1 ─── */
+    async function runS1() {
+      body().innerHTML = '';
+      await wait(250);
+
+      addDateChip('Today');
+      await wait(350);
+
+      addMsg('Where is my package IL123456789?', 'user', '11:31', true);
+      await wait(600);
+
+      const t = addTyping();
+      await wait(1600);
+      removeEl(t);
+
+      addMsg(
+        '📦 Package <strong>IL123456789</strong> located!<br>' +
+        '📍 Status: Tel Aviv Sorting Center<br>' +
+        '🕐 Last scan: Today at 11:32<br>' +
+        '🚚 Estimated delivery: <strong>Tomorrow, 14:00–16:00</strong><br>' +
+        "I'll notify you automatically when it's out for delivery. ✅",
+        'bot', '11:32', false
+      );
+    }
+
+    /* ─── Scenario 2 ─── */
+    async function runS2() {
+      body().innerHTML = '';
+      await wait(250);
+
+      addDateChip('Today');
+      await wait(450);
+
+      addMsg(
+        "⚠️ <strong>Alert:</strong> Your package IL123456789 hasn't moved in <strong>48 hours</strong>.<br>" +
+        "This is unusual. I've automatically opened support ticket <strong>#2847</strong>.<br>" +
+        "Our team is investigating. Expected update within 2 hours.<br>" +
+        "Would you like to reschedule your delivery? 👇",
+        'bot', '09:14', true
+      );
+      await wait(500);
+
+      // action buttons
+      const row = document.createElement('div');
+      row.className = 'action-row';
+
+      const yes = document.createElement('button');
+      yes.className = 'act-btn act-yes';
+      yes.textContent = '✅ Yes, reschedule';
+
+      const no = document.createElement('button');
+      no.className = 'act-btn act-no';
+      no.textContent = '❌ No thanks';
+
+      yes.onclick = () => handleS2(row, true);
+      no.onclick  = () => handleS2(row, false);
+
+      row.appendChild(yes);
+      row.appendChild(no);
+      body().appendChild(row);
+      scroll();
+    }
+
+    async function handleS2(row, agreed) {
+      if (busy) return;
+      busy = true;
+      row.querySelectorAll('button').forEach(b => b.disabled = true);
+
+      if (agreed) {
+        addMsg('✅ Yes, reschedule', 'user', '09:15', true);
+        await wait(350);
+        const t = addTyping();
+        await wait(1300);
+        removeEl(t);
+        addMsg(
+          "✅ <strong>Rescheduled to Thursday 14:00–16:00.</strong><br>You'll get a reminder 1 hour before. 👍",
+          'bot', '09:15'
+        );
+      } else {
+        addMsg('❌ No thanks', 'user', '09:15', true);
+        await wait(350);
+        const t = addTyping();
+        await wait(1100);
+        removeEl(t);
+        addMsg(
+          "Understood! I'll keep monitoring your package and update you if anything changes. 🔔",
+          'bot', '09:15'
+        );
+      }
+
+      busy = false;
+    }
+
+    /* ─── Scenario 3 ─── */
+    async function runS3() {
+      body().innerHTML = '';
+      await wait(250);
+
+      addDateChip('Today');
+      await wait(450);
+
+      addMsg(
+        '🚨 <strong>Heads up about your AliExpress order:</strong><br>' +
+        'Due to reduced flight capacity caused by the current security situation,<br>' +
+        'international parcels from China are delayed <strong>5–7 days</strong>.<br><br>' +
+        '📅 Your delivery: <s>Dec 15</s> → <strong>Dec 20–22</strong><br><br>' +
+        "No action needed. I'll keep you updated automatically. 🇮🇱",
+        'bot', '08:55', true
+      );
+    }
+
+    /* ─── Scenario runner ─── */
+    const runners = [runS1, runS2, runS3];
+
+    async function advance() {
+      if (busy) return;
+      busy = true;
+
+      $('next-btn').disabled = true;
+
+      current = (current + 1) % 3;
+
+      $('s-num').textContent  = current + 1;
+      $('s-title').textContent = titles[current];
+      $('hint-txt').textContent = hints[current];
+      $('next-btn').textContent = current === 2 ? '↩ Restart' : 'Next Scenario ▶';
+
+      await runners[current]();
+
+      await wait(200);
+      $('next-btn').disabled = false;
+      busy = false;
+    }
+
+    $('next-btn').addEventListener('click', advance);
+
+    /* ─── Boot with Scenario 1 ─── */
+    (async () => {
+      busy = true;
+      await runS1();
+      busy = false;
+    })();
+  </script>
+
+</body>
+</html>
