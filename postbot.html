@@ -345,48 +345,123 @@
     .act-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     .act-btn:disabled { opacity: 0.45; cursor: default; transform: none !important; }
 
-    /* ─── Input bar ─── */
-    .chat-input {
-      background: #f0f2f5;
-      padding: 7px 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* ─── Input bar — pastel gradient (FIX 1) ─── */
+    .chat-input-bar {
+      background: linear-gradient(135deg, #f5e642, #f0a0b0, #a0c4f5, #a8e6b0);
+      padding: 5px 12px 12px;
       flex-shrink: 0;
     }
-    .input-mock {
-      flex: 1;
+    .cib-handle {
+      width: 36px; height: 4px;
+      background: rgba(0,0,0,0.18);
+      border-radius: 2px;
+      margin: 0 auto 8px;
+    }
+    .cib-field {
+      display: block;
+      width: 100%;
       background: white;
-      border-radius: 22px;
-      padding: 9px 14px;
+      border: 1.5px solid rgba(0,0,0,0.09);
+      border-radius: 20px;
+      padding: 9px 16px;
       font-size: 13px;
       color: #bbb;
-      border: none;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
       pointer-events: none;
     }
-    .mic-btn {
-      width: 36px; height: 36px;
-      background: #CC0000;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 14px;
-      flex-shrink: 0;
+    .cib-home-bar {
+      width: 110px; height: 4px;
+      background: rgba(0,0,0,0.22);
+      border-radius: 2px;
+      margin: 9px auto 0;
     }
 
-    /* ─── Home indicator ─── */
-    .home-bar-wrap {
-      height: 26px;
+    /* ─── Calendar scheduling card (FIX 2) ─── */
+    .cal-card {
+      align-self: flex-start;
       background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      border-radius: 0 14px 14px 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.14);
+      padding: 14px 13px 13px;
+      width: calc(100% - 20px);
+      max-width: 268px;
+      position: relative;
+      animation: msgIn 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .home-bar { width: 110px; height: 4px; background: #222; border-radius: 2px; opacity: 0.22; }
+    .cal-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -7px;
+      width: 0; height: 0;
+      border-top: 8px solid white;
+      border-left: 7px solid transparent;
+    }
+    .cal-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 11px;
+    }
+    .cal-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+    .cal-days {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .cal-pill {
+      padding: 5px 9px;
+      border-radius: 16px;
+      border: 1.5px solid #e0e0e0;
+      background: #f7f7f7;
+      color: #555;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.14s;
+    }
+    .cal-pill.cal-sel { background: #CC0000; border-color: #CC0000; color: white; }
+    .cal-pill:hover:not(.cal-sel) { border-color: #CC0000; color: #CC0000; background: #fff5f5; }
+    .cal-times {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .cal-time {
+      padding: 7px 4px;
+      border-radius: 10px;
+      border: 1.5px solid #e0e0e0;
+      background: #f7f7f7;
+      color: #555;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.14s;
+    }
+    .cal-time.cal-sel { background: #CC0000; border-color: #CC0000; color: white; }
+    .cal-time:hover:not(.cal-sel) { border-color: #CC0000; color: #CC0000; background: #fff5f5; }
+    .cal-confirm {
+      width: 100%;
+      background: #CC0000;
+      color: white;
+      border: none;
+      padding: 9px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.14s, transform 0.1s;
+    }
+    .cal-confirm:hover { background: #aa0000; }
+    .cal-confirm:active { transform: scale(0.98); }
 
     /* ─── Next button ─── */
     .cta-wrap {
@@ -689,13 +764,11 @@
 
         <div class="chat-body" id="chat-body"></div>
 
-        <div class="chat-input">
-          <span style="font-size:20px;color:#aaa">😊</span>
-          <div class="input-mock">Type a message…</div>
-          <div class="mic-btn">🎤</div>
+        <div class="chat-input-bar">
+          <div class="cib-handle"></div>
+          <div class="cib-field">Type a message…</div>
+          <div class="cib-home-bar"></div>
         </div>
-
-        <div class="home-bar-wrap"><div class="home-bar"></div></div>
 
       </div>
     </div>
@@ -950,11 +1023,9 @@
       scroll();
     }
 
-    /* ── FIX 1+2: wider coords, OSRM road route, fitBounds ── */
     async function initMap() {
       if (leafletMap) return;
 
-      /* FIX 1 — new, well-separated coordinates */
       const pts = {
         depot:    [32.0650, 34.7650],
         stop1:    [32.0720, 34.7700],
@@ -962,6 +1033,10 @@
         stop3:    [32.0830, 34.7800],
         customer: [32.0900, 34.7850],
       };
+      /* FIX 1 — truck starts between Stop 2 and Stop 3 */
+      const truckStart = [32.0805, 34.7775];
+      /* FIX 2 — delivery window label midpoint */
+      const deliveryMid = [32.0865, 34.7825];
 
       leafletMap = L.map('map-div', {
         zoomControl: false,
@@ -973,21 +1048,19 @@
         maxZoom: 19,
       }).addTo(leafletMap);
 
-      /* Fit all points in view with padding */
-      const allPts = Object.values(pts);
-      leafletMap.fitBounds(allPts, { padding: [48, 48] });
+      leafletMap.fitBounds(Object.values(pts), { padding: [48, 48] });
 
-      /* ── Completed route polyline (gray dashed) ── */
+      /* Completed route (gray dashed) */
       L.polyline([pts.depot, pts.stop1, pts.stop2, pts.stop3], {
         color: '#999', weight: 5, dashArray: '9 6', opacity: 0.85,
       }).addTo(leafletMap);
 
-      /* ── Remaining route polyline (red) — updated with road geometry if OSRM succeeds ── */
+      /* Remaining route (red) — updated with OSRM road geometry */
       const redLine = L.polyline([pts.stop3, pts.customer], {
         color: '#CC0000', weight: 5, opacity: 0.9,
       }).addTo(leafletMap);
 
-      /* ── Stop markers ── */
+      /* Stop markers */
       L.marker(pts.stop1, {
         icon: L.divIcon({
           html: '<div class="lm-gray">Stop 1 ✓</div>',
@@ -1009,6 +1082,14 @@
         }),
       }).addTo(leafletMap);
 
+      /* FIX 2 — delivery window floating label on the final segment */
+      L.marker(deliveryMid, {
+        icon: L.divIcon({
+          html: '<div class="lm-delivery-window">📦 14:00–16:00</div>',
+          className: '', iconSize: [112, 24], iconAnchor: [56, 12],
+        }),
+      }).addTo(leafletMap);
+
       L.marker(pts.customer, {
         icon: L.divIcon({
           html: '<div class="lm-customer-wrap"><div class="lm-customer-pin">📍</div><div class="lm-customer-label">You 🏠</div></div>',
@@ -1016,8 +1097,8 @@
         }),
       }).addTo(leafletMap);
 
-      /* ── Truck marker ── */
-      truckMarker = L.marker(pts.stop3, {
+      /* FIX 1 — truck placed at midpoint between Stop 2 and Stop 3 */
+      truckMarker = L.marker(truckStart, {
         icon: L.divIcon({
           html: '<div class="lm-truck">🚚</div>',
           className: '', iconSize: [30, 30], iconAnchor: [15, 15],
@@ -1025,35 +1106,42 @@
         zIndexOffset: 600,
       }).addTo(leafletMap);
 
-      /* ── FIX 2 — fetch real road route from OSRM ── */
-      let animPath = [pts.stop3, pts.customer]; /* straight-line fallback */
+      /* Fetch OSRM road route for Stage 2 (Stop 3 → Customer) */
+      let stage2Path = [pts.stop3, pts.customer];
       try {
-        const s3   = pts.stop3;
-        const cust = pts.customer;
-        /* OSRM uses lng,lat order */
-        const url = `https://router.project-osrm.org/route/v1/driving/${s3[1]},${s3[0]};${cust[1]},${cust[0]}?overview=full&geometries=geojson`;
+        const s3 = pts.stop3, cu = pts.customer;
+        const url = `https://router.project-osrm.org/route/v1/driving/${s3[1]},${s3[0]};${cu[1]},${cu[0]}?overview=full&geometries=geojson`;
         const resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
         const data = await resp.json();
         if (data.code === 'Ok' && data.routes && data.routes[0]) {
-          /* GeoJSON coords are [lng, lat] — convert to Leaflet [lat, lng] */
-          animPath = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-          /* Update red polyline to follow real road */
-          redLine.setLatLngs(animPath);
+          stage2Path = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+          redLine.setLatLngs(stage2Path);
         }
       } catch (e) {
-        /* Network error or timeout — keep straight-line fallback */
-        console.warn('OSRM route fetch failed, using straight line:', e.message);
+        console.warn('OSRM failed, using straight line:', e.message);
       }
 
-      /* ── Start truck animation along the road path ── */
-      startTruckAnim(animPath, 8000);
+      /* FIX 1 — two-stage animation:
+         Stage 1: truckStart → Stop3, 3 s  (status: "2 stops away")
+         Pause:   1 s at Stop3             (status: "1 stop away")
+         Stage 2: Stop3 → Customer, 5 s    (on arrival: "Arriving now!") */
+      startTruckAnim([truckStart, pts.stop3], 3000, () => {
+        $('map-eta').textContent = '🚚 1 stop away · ETA 14:00–16:00';
+        pauseId = setTimeout(() => {
+          pauseId = null;
+          startTruckAnim(stage2Path, 5000, () => {
+            $('map-eta').textContent = '🎉 Arriving now!';
+            $('arrival-toast').classList.add('show');
+          });
+        }, 1000);
+      });
     }
 
-    /* Smooth animation along an arbitrary polyline */
-    function startTruckAnim(path, duration) {
-      if (path.length < 2) return;
+    /* Animate truck along an arbitrary polyline; calls onComplete when done */
+    function startTruckAnim(path, duration, onComplete) {
+      if (path.length < 2) { if (onComplete) onComplete(); return; }
 
-      /* Precompute cumulative distances (in raw deg units, good enough for animation) */
+      /* Cumulative distances in degree units (fine for smooth interpolation) */
       const dists = [0];
       for (let i = 1; i < path.length; i++) {
         const dlat = path[i][0] - path[i-1][0];
@@ -1068,7 +1156,7 @@
         const progress = Math.min((now - t0) / duration, 1);
         const target   = progress * total;
 
-        /* Find segment with binary search */
+        /* Binary-search for current segment */
         let lo = 0, hi = path.length - 2;
         while (lo < hi) {
           const mid = (lo + hi + 1) >> 1;
@@ -1086,15 +1174,10 @@
           rafId = requestAnimationFrame(frame);
         } else {
           rafId = null;
-          onTruckArrived();
+          if (onComplete) onComplete();
         }
       }
       rafId = requestAnimationFrame(frame);
-    }
-
-    function onTruckArrived() {
-      $('map-eta').textContent = '🎉 Arriving now!';
-      $('arrival-toast').classList.add('show');
     }
 
 
@@ -1131,12 +1214,10 @@
         addMsg('✅ Yes, reschedule', 'user', '09:15', true);
         await wait(350);
         const t = addTyping();
-        await wait(1300);
+        await wait(900);
         removeEl(t);
-        addMsg(
-          "✅ <strong>Rescheduled to Thursday 14:00–16:00.</strong><br>You'll get a reminder 1 hour before. 👍",
-          'bot', '09:15'
-        );
+        showCalendarCard();
+        busy = false; /* calendar manages its own busy state */
       } else {
         addMsg('❌ No thanks', 'user', '09:15', true);
         await wait(350);
@@ -1147,8 +1228,82 @@
           "Understood! I'll keep monitoring your package and update you if anything changes. 🔔",
           'bot', '09:15'
         );
+        busy = false;
       }
-      busy = false;
+    }
+
+    function showCalendarCard() {
+      let selDayLabel = 'Thu';
+      let selDayFull  = 'Thursday';
+      let selTime     = '14:00–16:00';
+
+      const days = [
+        { label: 'Today',    full: 'Today'     },
+        { label: 'Tomorrow', full: 'Tomorrow'  },
+        { label: 'Wed',      full: 'Wednesday' },
+        { label: 'Thu',      full: 'Thursday'  },
+        { label: 'Fri',      full: 'Friday'    },
+      ];
+      const times = ['09:00–12:00', '12:00–14:00', '14:00–16:00', '16:00–19:00'];
+
+      const card = document.createElement('div');
+      card.className = 'cal-card msg-gap-top';
+
+      card.innerHTML = `
+        <div class="cal-title">📅 Choose a new delivery slot</div>
+        <div class="cal-section-label">Date</div>
+        <div class="cal-days">
+          ${days.map(d =>
+            `<button class="cal-pill${d.label === 'Thu' ? ' cal-sel' : ''}"
+               data-full="${d.full}">${d.label}</button>`
+          ).join('')}
+        </div>
+        <div class="cal-section-label">Time slot</div>
+        <div class="cal-times">
+          ${times.map(t =>
+            `<button class="cal-time${t === '14:00–16:00' ? ' cal-sel' : ''}"
+               data-time="${t}">${t}</button>`
+          ).join('')}
+        </div>
+        <button class="cal-confirm">✅ Confirm Reschedule</button>
+      `;
+
+      card.querySelectorAll('.cal-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          card.querySelectorAll('.cal-pill').forEach(b => b.classList.remove('cal-sel'));
+          btn.classList.add('cal-sel');
+          selDayFull  = btn.dataset.full;
+          selDayLabel = btn.textContent;
+        });
+      });
+
+      card.querySelectorAll('.cal-time').forEach(btn => {
+        btn.addEventListener('click', () => {
+          card.querySelectorAll('.cal-time').forEach(b => b.classList.remove('cal-sel'));
+          btn.classList.add('cal-sel');
+          selTime = btn.dataset.time;
+        });
+      });
+
+      card.querySelector('.cal-confirm').addEventListener('click', async () => {
+        if (busy) return;
+        busy = true;
+        removeEl(card);
+        addMsg(`${selDayFull}, ${selTime}`, 'user', '09:16', true);
+        await wait(400);
+        const t = addTyping();
+        await wait(1200);
+        removeEl(t);
+        addMsg(
+          `✅ <strong>Rescheduled to ${selDayFull} ${selTime}.</strong><br>` +
+          "You'll get a reminder 1 hour before the courier arrives. 👍",
+          'bot', '09:16'
+        );
+        busy = false;
+      });
+
+      chatBody().appendChild(card);
+      scroll();
     }
 
 
